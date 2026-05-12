@@ -20,7 +20,7 @@ jobs:
       - name: Install Dependencies
         run: |
           pip install -r requirements.txt
-          playwright install chromium
+          # No more playwright install needed!
 
       - name: Run Scraper
         run: python scraper.py
