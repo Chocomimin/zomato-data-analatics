@@ -20,10 +20,8 @@ jobs:
       - name: Install Dependencies
         run: |
           pip install -r requirements.txt
-          # No more playwright install needed!
 
       - name: Run Scraper
         run: python scraper.py
         env:
-          # This ensures the script can access your database securely
           DB_URL: ${{ secrets.DATABASE_URL }}
