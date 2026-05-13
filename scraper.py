@@ -8,35 +8,18 @@ from datetime import datetime
 DB_CONNECTION_STRING = os.environ.get('DB_URL')
 
 def save_to_database(data):
-    """
-    Connects to Neon and saves the competitive data point.
-    """
     try:
         conn = psycopg2.connect(DB_CONNECTION_STRING)
         cur = conn.cursor()
-
-        # SQL Insert matching the schema in image_56f518.png
         insert_query = """
         INSERT INTO zomato_reviews_log (
-            scrape_timestamp, 
-            restaurant_name, 
-            rating, 
-            delivery_rating_count, 
-            url, 
-            latest_review_sample
-        )
-        VALUES (%s, %s, %s, %s, %s, %s);
+            scrape_timestamp, restaurant_name, rating, delivery_rating_count, url, latest_review_sample
+        ) VALUES (%s, %s, %s, %s, %s, %s);
         """
-
         cur.execute(insert_query, (
-            data['timestamp'],
-            data['restaurant'],
-            data['rating'],
-            data['delivery_rating_count'],
-            data['url'],
-            data['latest_review_sample']
+            data['timestamp'], data['restaurant'], data['rating'],
+            data['delivery_rating_count'], data['url'], data['latest_review_sample']
         ))
-
         conn.commit()
         cur.close()
         conn.close()
@@ -46,10 +29,6 @@ def save_to_database(data):
         raise e
 
 def scrape_zomato_data():
-    """
-    Scrapes live metrics and sentiment for the Indiranagar Biryani market.
-    """
-    # Advanced targets for Market Share Intelligence
     targets = {
         "Meghana Foods": "https://www.zomato.com/bangalore/meghana-foods-indiranagar/reviews",
         "Empire Restaurant": "https://www.zomato.com/bangalore/empire-restaurant-indiranagar/reviews",
@@ -57,10 +36,11 @@ def scrape_zomato_data():
     }
 
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+        "Accept-Language": "en-US,en;q=0.9"
     }
 
-    print(f"🚀 Starting Advanced Sentiment & Market Analysis...")
+    print(f"🚀 Starting Smart Sentiment Analysis...")
 
     for name, url in targets.items():
         try:
@@ -70,27 +50,29 @@ def scrape_zomato_data():
             if response.status_code == 200:
                 soup = BeautifulSoup(response.text, 'html.parser')
 
-                # --- EXTRACTION LOGIC ---
+                # --- THE FIX: SMART EXTRACTION LOGIC ---
+                all_paragraphs = soup.find_all("p")
+                latest_review = "No recent text review found during this scrape."
 
-                # 1. Capture Latest Customer Review (The 'Refund Risk' Metric)
-                review_element = soup.find("p", {"class": "sc-1hez2tp-0"})
-                latest_review = review_element.text if review_element else "No text review found in this cycle."
+                # Loop through all text and skip the bot-protection warnings
+                for p in all_paragraphs:
+                    text = p.text.strip()
+                    # If it's a real sentence and NOT the location warning, save it!
+                    if "Detect current location" not in text and "Using GPS" not in text and len(text) > 20:
+                        latest_review = text
+                        break
 
-                # 2. Capture Rating Count (The 'Growth' Metric)
-                # We use the '70K' style text for consistency with your existing visuals
+                # Capture Rating Count
                 count_element = soup.find("div", string=lambda x: x and "K" in x)
                 rating_count = count_element.text if count_element else "70.1K"
-
-                # 3. Numeric Rating (For Power BI averages)
-                rating_val = "4.4"
 
                 data_point = {
                     "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     "restaurant": name,
-                    "rating": rating_val,
+                    "rating": "4.4",
                     "delivery_rating_count": rating_count,
                     "url": url,
-                    "latest_review_sample": latest_review[:250] # Limit to 250 characters
+                    "latest_review_sample": latest_review[:250]
                 }
 
                 save_to_database(data_point)
