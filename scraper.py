@@ -19,7 +19,7 @@ def save_to_database(data):
             data['timestamp'],
             data['restaurant'],
             data['rating'],
-            data['total_reviews'],
+            data['delivery_rating_count'],
             data['url']
         ))
         conn.commit()
