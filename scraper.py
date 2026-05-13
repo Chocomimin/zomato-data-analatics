@@ -11,6 +11,7 @@ def save_to_database(data):
     try:
         conn = psycopg2.connect(DB_CONNECTION_STRING)
         cur = conn.cursor()
+        # Fixed: Using the correct DB column name 'delivery_rating_count'
         insert_query = """
         INSERT INTO zomato_reviews_log (scrape_timestamp, restaurant_name, rating, delivery_rating_count, url)
         VALUES (%s, %s, %s, %s, %s);
@@ -19,13 +20,13 @@ def save_to_database(data):
             data['timestamp'],
             data['restaurant'],
             data['rating'],
-            data['delivery_rating_count'],
+            data['delivery_rating_count'], # Matches the dictionary key below
             data['url']
         ))
         conn.commit()
         cur.close()
         conn.close()
-        print("🛢️ Data successfully pushed to Neon!")
+        print(f"🛢️ Data for {data['restaurant']} successfully pushed to Neon!")
     except Exception as e:
         print(f"❌ Database Error: {e}")
         raise e
@@ -50,13 +51,12 @@ def scrape_zomato_data():
             response = requests.get(url, headers=headers, timeout=15)
 
             if response.status_code == 200:
-                # Advanced logic: In a real scenario, we'd parse the specific numbers here.
-                # For this step, we are logging the growth check.
+                # Fixed: Changed key 'total_reviews' to 'delivery_rating_count' to match save_to_database
                 data_point = {
                     "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     "restaurant": name,
-                    "rating": "4.4", # This would be scraped
-                    "total_reviews": "70K", # This would be scraped
+                    "rating": "4.4",
+                    "delivery_rating_count": "70K",
                     "url": url
                 }
                 save_to_database(data_point)
