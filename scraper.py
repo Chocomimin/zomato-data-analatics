@@ -12,7 +12,7 @@ def save_to_database(data):
         conn = psycopg2.connect(DB_CONNECTION_STRING)
         cur = conn.cursor()
         insert_query = """
-        INSERT INTO zomato_reviews_log (scrape_timestamp, restaurant_name, rating, total_reviews, url)
+        INSERT INTO zomato_reviews_log (scrape_timestamp, restaurant_name, rating, delivery_rating_count, url)
         VALUES (%s, %s, %s, %s, %s);
         """
         cur.execute(insert_query, (
